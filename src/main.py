@@ -498,7 +498,7 @@ def silence_listener(throwaway_frames):
 						numSilenceRuns = numSilenceRuns + 1
 						if debug:
 							print("Debug: Speech detected")
-							print("Debug: Length = %s Data = %s" % length, data)
+							print("Debug: Data = %s" % data)
 
 			# only count silence runs after the first one
 			# (allow user to speak for total of max recording length if they haven't said anything yet)
