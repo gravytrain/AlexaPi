@@ -455,7 +455,7 @@ def silence_listener(throwaway_frames):
 	silenceRun = 0
 	start = time.time()
 
-	while thresholdSilenceMet is True and silenceMetRuns == 0:
+	while thresholdSilenceMet is False and silenceMetRuns == 0:
 		if debug:
 			print("Debug: Setting up recording")
 
