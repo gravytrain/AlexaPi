@@ -486,7 +486,7 @@ def silence_listener(throwaway_frames):
 			if length:
 				audio += data
 
-				if length >= VAD_PERIOD:
+				if length == VAD_PERIOD:
 					isSpeech = vad.is_speech(data, VAD_SAMPLERATE)
 
 					if not isSpeech:
