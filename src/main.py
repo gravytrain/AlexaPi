@@ -1,30 +1,29 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
+
+import email
 import importlib
-import os
-import tempfile
-import signal
-import shutil
-import time
-import sys
-import threading
 import json
 import optparse
-import email
+import os
+import shutil
+import signal
+import sys
+import tempfile
+import threading
+import time
 
-import yaml
 import alsaaudio
 import requests
-from memcache import Client
-
 import webrtcvad
-
+import yaml
+from memcache import Client
 from pocketsphinx import get_model_path
 from pocketsphinx.pocketsphinx import Decoder
 
-import alexapi.config
 import alexapi.bcolors as bcolors
+import alexapi.config
 import alexapi.tunein as tunein
 
 with open(alexapi.config.filename, 'r') as stream:
@@ -33,15 +32,15 @@ with open(alexapi.config.filename, 'r') as stream:
 # Get arguments
 parser = optparse.OptionParser()
 parser.add_option('-s', '--silent',
-		dest="silent",
-		action="store_true",
-		default=False,
-		help="start without saying hello")
+				  dest="silent",
+				  action="store_true",
+				  default=False,
+				  help="start without saying hello")
 parser.add_option('-d', '--debug',
-		dest="debug",
-		action="store_true",
-		default=False,
-		help="display debug messages")
+				  dest="debug",
+				  action="store_true",
+				  default=False,
+				  help="display debug messages")
 
 cmdopts, cmdargs = parser.parse_args()
 silent = cmdopts.silent
@@ -56,7 +55,6 @@ platform = cl(config)
 
 
 class Player(object):
-
 	config = None
 	platform = None
 	pHandler = None
@@ -66,17 +64,17 @@ class Player(object):
 	playlist_last_item = None
 	progressReportRequired = []
 
-	def __init__(self, config, platform, pHandler): # pylint: disable=redefined-outer-name
+	def __init__(self, config, platform, pHandler):  # pylint: disable=redefined-outer-name
 		self.config = config
 		self.platform = platform
-		self.pHandler = pHandler # pylint: disable=invalid-name
+		self.pHandler = pHandler  # pylint: disable=invalid-name
 		self.tunein_parser = tunein.TuneIn(5000)
 
 	def play_playlist(self, payload):
 		self.navigation_token = payload['navigationToken']
 		self.playlist_last_item = payload['audioItem']['streams'][-1]['streamId']
 
-		for stream in payload['audioItem']['streams']: # pylint: disable=redefined-outer-name
+		for stream in payload['audioItem']['streams']:  # pylint: disable=redefined-outer-name
 
 			streamId = stream['streamId']
 			if stream['progressReportRequired']:
@@ -89,7 +87,8 @@ class Player(object):
 			if (url.find('radiotime.com') != -1):
 				url = self.tunein_playlist(url)
 
-			self.pHandler.queued_play(mrl_fix(url), stream['offsetInMilliseconds'], audio_type='media', streamId=streamId)
+			self.pHandler.queued_play(mrl_fix(url), stream['offsetInMilliseconds'], audio_type='media',
+									  streamId=streamId)
 
 	def play_speech(self, mrl):
 		self.stop()
@@ -144,7 +143,9 @@ def playback_callback(requestType, playerActivity, streamId):
 
 	return player.playback_callback(requestType, playerActivity, streamId)
 
-im = importlib.import_module('alexapi.playback_handlers.' + config['sound']['playback_handler'] + "handler", package=None)
+
+im = importlib.import_module('alexapi.playback_handlers.' + config['sound']['playback_handler'] + "handler",
+							 package=None)
 cl = getattr(im, config['sound']['playback_handler'].capitalize() + 'Handler')
 pHandler = cl(config, playback_callback)
 player = Player(config, platform, pHandler)
@@ -294,6 +295,7 @@ def alexa_getnextitem(navigationToken):
 	response = requests.post(url, headers=headers, data=json.dumps(data))
 	process_response(response)
 
+
 def alexa_playback_progress_report_request(requestType, playerActivity, stream_id):
 	# https://developer.amazon.com/public/solutions/alexa/alexa-voice-service/rest/audioplayer-events-requests
 	# streamId                  Specifies the identifier for the current stream.
@@ -340,10 +342,14 @@ def alexa_playback_progress_report_request(requestType, playerActivity, stream_i
 
 	response = requests.post(url, headers=headers, data=json.dumps(data))
 	if response.status_code != 204:
-		print("{}(alexa_playback_progress_report_request Response){} {}".format(bcolors.WARNING, bcolors.ENDC, response))
+		print(
+				"{}(alexa_playback_progress_report_request Response){} {}".format(bcolors.WARNING, bcolors.ENDC,
+																				  response))
 	else:
 		if debug:
-			print("{}Playback Progress Report was {}Successful!{}".format(bcolors.OKBLUE, bcolors.OKGREEN, bcolors.ENDC))
+			print(
+					"{}Playback Progress Report was {}Successful!{}".format(bcolors.OKBLUE, bcolors.OKGREEN,
+																			bcolors.ENDC))
 
 
 def process_response(response):
@@ -366,7 +372,8 @@ def process_response(response):
 					f.write(payload.get_payload())
 			else:
 				if debug:
-					print("{}NEW CONTENT TYPE RETURNED: {} {}".format(bcolors.WARNING, bcolors.ENDC, payload.get_content_type()))
+					print("{}NEW CONTENT TYPE RETURNED: {} {}".format(bcolors.WARNING, bcolors.ENDC,
+																	  payload.get_content_type()))
 
 		# Now process the response
 		if 'directives' in j['messageBody']:
@@ -378,12 +385,15 @@ def process_response(response):
 				if directive['namespace'] == 'SpeechSynthesizer':
 					if directive['name'] == 'speak':
 						platform.indicate_recording(False)
-						player.play_speech(mrl_fix("file://" + tmp_path + directive['payload']['audioContent'].lstrip("cid:") + ".mp3"))
+						player.play_speech(mrl_fix(
+								"file://" + tmp_path + directive['payload']['audioContent'].lstrip("cid:") + ".mp3"))
 
 				elif directive['namespace'] == 'SpeechRecognizer':
 					if directive['name'] == 'listen':
 						if debug:
-							print("{}Further Input Expected, timeout in: {} {}ms".format(bcolors.OKBLUE, bcolors.ENDC, directive['payload']['timeoutIntervalInMillis']))
+							print("{}Further Input Expected, timeout in: {} {}ms".format(bcolors.OKBLUE, bcolors.ENDC,
+																						 directive['payload'][
+																							 'timeoutIntervalInMillis']))
 
 						player.play_speech(resources_path + 'beep.wav')
 						timeout = directive['payload']['timeoutIntervalInMillis'] / 116
@@ -424,67 +434,76 @@ def process_response(response):
 
 	elif response.status_code == 204:
 		if debug:
-			print("{}Request Response is null {}(This is OKAY!){}".format(bcolors.OKBLUE, bcolors.OKGREEN, bcolors.ENDC))
+			print(
+					"{}Request Response is null {}(This is OKAY!){}".format(bcolors.OKBLUE, bcolors.OKGREEN,
+																			bcolors.ENDC))
 	else:
-		print("{}(process_response Error){} Status Code: {}".format(bcolors.WARNING, bcolors.ENDC, response.status_code))
+		print(
+				"{}(process_response Error){} Status Code: {}".format(bcolors.WARNING, bcolors.ENDC,
+																	  response.status_code))
 		response.connection.close()
 
 		platform.indicate_failure()
 
 
 def silence_listener(throwaway_frames):
-
-	if debug:
-		print("Debug: Setting up recording")
-
-	# Reenable reading microphone raw data
-	inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, config['sound']['input_device'])
-	inp.setchannels(1)
-	inp.setrate(VAD_SAMPLERATE)
-	inp.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-	inp.setperiodsize(VAD_PERIOD)
-	audio = ""
-
 	# Buffer as long as we haven't heard enough silence or the total size is within max size
 	thresholdSilenceMet = False
+	silenceMetRuns = 0
 	frames = 0
 	numSilenceRuns = 0
 	silenceRun = 0
 	start = time.time()
 
-	if debug:
-		print("Debug: Start recording")
+	while thresholdSilenceMet is True and silenceMetRuns == 0:
+		if debug:
+			print("Debug: Setting up recording")
 
-	platform.indicate_recording()
+		# Reenable reading microphone raw data
+		inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, config['sound']['input_device'])
+		inp.setchannels(1)
+		inp.setrate(VAD_SAMPLERATE)
+		inp.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+		inp.setperiodsize(VAD_PERIOD)
+		audio = ""
 
-	# do not count first 10 frames when doing VAD
-	while frames < throwaway_frames:  # VAD_THROWAWAY_FRAMES):
-		length, data = inp.read()
-		frames = frames + 1
-		if length:
-			audio += data
+		if debug:
+			print("Debug: Start recording")
 
-	# now do VAD
-	while platform.should_record() or ((thresholdSilenceMet is False) and ((time.time() - start) < MAX_RECORDING_LENGTH)):
-		length, data = inp.read()
-		if length:
-			audio += data
+		platform.indicate_recording()
 
-			if length == VAD_PERIOD:
-				isSpeech = vad.is_speech(data, VAD_SAMPLERATE)
+		# do not count first 10 frames when doing VAD
+		while frames < throwaway_frames:  # VAD_THROWAWAY_FRAMES):
+			length, data = inp.read()
+			frames = frames + 1
+			if length:
+				audio += data
 
-				if not isSpeech:
-					silenceRun = silenceRun + 1
+		# now do VAD
+		while platform.should_record() or (
+					(thresholdSilenceMet is False) and ((time.time() - start) < MAX_RECORDING_LENGTH)):
+			length, data = inp.read()
+			if length:
+				audio += data
+
+				if length >= VAD_PERIOD:
+					isSpeech = vad.is_speech(data, VAD_SAMPLERATE)
+
+					if not isSpeech:
+						silenceRun = silenceRun + 1
 					# print "0"
-				else:
-					silenceRun = 0
-					numSilenceRuns = numSilenceRuns + 1
+					else:
+						silenceRun = 0
+						numSilenceRuns = numSilenceRuns + 1
 					# print "1"
 
-		# only count silence runs after the first one
-		# (allow user to speak for total of max recording length if they haven't said anything yet)
-		if (numSilenceRuns != 0) and ((silenceRun * VAD_FRAME_MS) > VAD_SILENCE_TIMEOUT):
-			thresholdSilenceMet = True
+			# only count silence runs after the first one
+			# (allow user to speak for total of max recording length if they haven't said anything yet)
+			if (numSilenceRuns != 0) and ((silenceRun * VAD_FRAME_MS) > VAD_SILENCE_TIMEOUT):
+				thresholdSilenceMet = True
+				silenceMetRuns = 1
+
+				player.play_speech(resources_path + 'alexayes.mp3')
 
 	if debug:
 		print("Debug: End recording")
@@ -528,8 +547,9 @@ def loop():
 
 			record_audio = True
 
-			if triggered_by_voice or (triggered_by_platform and platform.should_confirm_trigger):
-				player.play_speech(resources_path + 'alexayes.mp3')
+		# This needs to be played only if nothing is registered for the
+		# if triggered_by_voice or (triggered_by_platform and platform.should_confirm_trigger):
+		# 	player.play_speech(resources_path + 'alexayes.mp3')
 
 		# To avoid overflows close the microphone connection
 		inp.close()
@@ -541,7 +561,7 @@ def loop():
 				try:
 					if os.path.isfile(file_path):
 						os.remove(file_path)
-				except Exception as exp: # pylint: disable=broad-except
+				except Exception as exp:  # pylint: disable=broad-except
 					print(exp)
 
 		silence_listener(VAD_THROWAWAY_FRAMES)
@@ -575,7 +595,7 @@ def setup():
 	platform.after_setup()
 
 
-def cleanup(signal, frame):   # pylint: disable=redefined-outer-name,unused-argument
+def cleanup(signal, frame):  # pylint: disable=redefined-outer-name,unused-argument
 	platform.cleanup()
 	pHandler.cleanup()
 	shutil.rmtree(tmp_path)
