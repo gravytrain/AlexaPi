@@ -486,16 +486,16 @@ def silence_listener(throwaway_frames):
 			if length:
 				audio += data
 
-				if length == VAD_PERIOD:
+				if length >= VAD_PERIOD:
 					isSpeech = vad.is_speech(data, VAD_SAMPLERATE)
 
 					if not isSpeech:
 						silenceRun = silenceRun + 1
-					# print "0"
+						print("Debug: Silence")
 					else:
 						silenceRun = 0
 						numSilenceRuns = numSilenceRuns + 1
-					# print "1"
+						print("Debug: Speech detected")
 
 			# only count silence runs after the first one
 			# (allow user to speak for total of max recording length if they haven't said anything yet)
