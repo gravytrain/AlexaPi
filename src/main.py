@@ -505,13 +505,13 @@ def silence_listener(throwaway_frames):
 
 				player.play_speech(resources_path + 'alexayes.mp3')
 
-	if debug:
-		print("Debug: End recording")
+		if debug:
+			print("Debug: End recording")
 
-	platform.indicate_recording(False)
-	with open(tmp_path + 'recording.wav', 'w') as rf:
-		rf.write(audio)
-	inp.close()
+		platform.indicate_recording(False)
+		with open(tmp_path + 'recording.wav', 'w') as rf:
+			rf.write(audio)
+		inp.close()
 
 
 def loop():
