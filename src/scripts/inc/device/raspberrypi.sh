@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# shellcheck disable=SC2034
+DESCRIPTION="all Raspberry Pi variants"
+
 function install_device {
     run_pip install RPi.GPIO
 
@@ -11,5 +14,7 @@ EOL
 }
 
 function install_device_config {
+    config_set 'input_device' 'plughw:CARD=Device,DEV=0'
+
     config_set 'device' 'raspberrypi'
 }
